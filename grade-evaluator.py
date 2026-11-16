@@ -360,6 +360,41 @@ def calculate_total_grade(assignments):
 
 
 # ---------------------------------------------------------------------------
+# 4. RESUBMISSION LOGIC
+# ---------------------------------------------------------------------------
+def find_resubmissions(assignments):
+    """
+    Return every failed Formative assignment (score below 50) that has the
+    highest weight among the failed Formative assignments.
+
+    If several assignments share that highest weight, all of them are
+    returned. Summative assignments are never included.
+    """
+    failed_formative = []
+
+    for item in assignments:
+        if item["group"] == FORMATIVE and item["score"] < PASS_MARK:
+            failed_formative.append(item)
+
+    if len(failed_formative) == 0:
+        return []
+
+    # Find the highest weight among the failed Formative assignments.
+    highest_weight = 0.0
+    for item in failed_formative:
+        if item["weight"] > highest_weight:
+            highest_weight = item["weight"]
+
+    # Collect every failed assignment that has that weight (handles ties).
+    eligible = []
+    for item in failed_formative:
+        if abs(item["weight"] - highest_weight) < TOLERANCE:
+            eligible.append(item)
+
+    return eligible
+
+
+# ---------------------------------------------------------------------------
 # 5. DISPLAYING THE REPORT
 # ---------------------------------------------------------------------------
 def print_assignment_table(assignments):
@@ -379,10 +414,36 @@ def print_assignment_table(assignments):
     print("-" * 68)
 
 
-# ---------------------------------------------------------------------------
+def print_resubmission_options(assignments):
+    """Print the Formative assignments that may be resubmitted."""
+    print("\n--- Resubmission Options ---")
+
+    eligible = find_resubmissions(assignments)
+
+    if len(eligible) == 0:
+        # Distinguish "nothing failed" from "something failed but nothing
+        # is eligible" - in this assignment those are the same situation.
+        print("No failed Formative assignments. No resubmission is required.")
+        return
+
+    highest_weight = eligible[0]["weight"]
+    print(
+        f"Failed Formative assignment(s) with the highest weight "
+        f"({highest_weight:g}) that can be resubmitted:"
+    )
+
+    for item in eligible:
+        print(
+            f"  - {item['assignment']} "
+            f"(Score: {item['score']:g}, Weight: {item['weight']:g})"
+        )
+
+    print("Note: Summative assignments cannot be resubmitted.")
+
+
 def evaluate_grades(data):
     """
-    Validate the weights, calculate the results, and print the grade summary.
+    Validate the weights, calculate the results, and print the report.
     Returns True when the calculation finished, False when the data is invalid.
     """
     print("\n--- Processing Grades ---")
@@ -447,7 +508,12 @@ def evaluate_grades(data):
                 "is below 50%."
             )
 
+    # --- Resubmission options ---
+    print_resubmission_options(data)
+
     return True
+
+
 # ---------------------------------------------------------------------------
 # 6. PROGRAM ENTRY POINT
 # ---------------------------------------------------------------------------
