@@ -426,6 +426,27 @@ def evaluate_grades(data):
     print(f"Total weighted grade: {total_grade:.2f}%")
     print(f"Final GPA:            {gpa:.2f} / {GPA_SCALE:.1f}")
 
+    # --- Pass / Fail decision ---
+    # BOTH categories must independently reach at least 50%.
+    formative_passed = formative_percent >= PASS_MARK
+    summative_passed = summative_percent >= PASS_MARK
+
+    print("\n--- Final Decision ---")
+    if formative_passed and summative_passed:
+        print("FINAL STATUS: PASSED")
+    else:
+        print("FINAL STATUS: FAILED")
+        if not formative_passed:
+            print(
+                f"Reason: Formative percentage ({formative_percent:.2f}%) "
+                "is below 50%."
+            )
+        if not summative_passed:
+            print(
+                f"Reason: Summative percentage ({summative_percent:.2f}%) "
+                "is below 50%."
+            )
+
     return True
 # ---------------------------------------------------------------------------
 # 6. PROGRAM ENTRY POINT
