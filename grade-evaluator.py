@@ -322,6 +322,44 @@ def validate_weights(assignments):
 
 
 # ---------------------------------------------------------------------------
+# 3. GRADE CALCULATIONS
+# ---------------------------------------------------------------------------
+def calculate_category(assignments, group):
+    """
+    Calculate the marks earned in one category (Formative or Summative).
+
+    Each assignment contributes: (score * weight) / 100
+
+    Returns three values:
+        earned   -> weighted marks earned
+        weight   -> total weight of that category
+        percent  -> earned / weight * 100
+    """
+    earned = 0.0
+    weight = 0.0
+
+    for item in assignments:
+        if item["group"] == group:
+            earned += (item["score"] * item["weight"]) / 100.0
+            weight += item["weight"]
+
+    if weight > 0:
+        percent = (earned / weight) * 100.0
+    else:
+        percent = 0.0
+
+    return earned, weight, percent
+
+
+def calculate_total_grade(assignments):
+    """Add up the weighted marks of every assignment."""
+    total = 0.0
+    for item in assignments:
+        total += (item["score"] * item["weight"]) / 100.0
+    return total
+
+
+# ---------------------------------------------------------------------------
 # 5. DISPLAYING THE REPORT
 # ---------------------------------------------------------------------------
 def print_assignment_table(assignments):
@@ -344,7 +382,7 @@ def print_assignment_table(assignments):
 # ---------------------------------------------------------------------------
 def evaluate_grades(data):
     """
-    Validate the weights and display the loaded assignment records.
+    Validate the weights, calculate the results, and print the grade summary.
     Returns True when the calculation finished, False when the data is invalid.
     """
     print("\n--- Processing Grades ---")
@@ -359,18 +397,34 @@ def evaluate_grades(data):
 
     print_assignment_table(data)
 
-    formative_weight = 0.0
-    summative_weight = 0.0
-    for item in data:
-        if item["group"] == FORMATIVE:
-            formative_weight += item["weight"]
-        else:
-            summative_weight += item["weight"]
+    # --- Category calculations ---
+    formative_earned, formative_weight, formative_percent = calculate_category(
+        data, FORMATIVE
+    )
+    summative_earned, summative_weight, summative_percent = calculate_category(
+        data, SUMMATIVE
+    )
+
+    # --- Overall grade and GPA ---
+    total_grade = calculate_total_grade(data)
+    gpa = (total_grade / 100.0) * GPA_SCALE
 
     print("\n--- Weight Validation ---")
     print(f"Formative weight: {formative_weight:g} / 60   OK")
     print(f"Summative weight: {summative_weight:g} / 40   OK")
     print(f"Total weight:     {formative_weight + summative_weight:g} / 100  OK")
+
+    print("\n--- Grade Summary ---")
+    print(
+        f"Formative marks:      {formative_earned:6.2f} / {formative_weight:g}"
+        f"   ({formative_percent:.2f}%)"
+    )
+    print(
+        f"Summative marks:      {summative_earned:6.2f} / {summative_weight:g}"
+        f"   ({summative_percent:.2f}%)"
+    )
+    print(f"Total weighted grade: {total_grade:.2f}%")
+    print(f"Final GPA:            {gpa:.2f} / {GPA_SCALE:.1f}")
 
     return True
 # ---------------------------------------------------------------------------
