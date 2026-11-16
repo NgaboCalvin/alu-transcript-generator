@@ -175,3 +175,120 @@ GPA = (Total Grade / 100) × 5.0
 - GPA = (60 / 100) × 5.0 = **3.00 / 5.00**
 
 ---
+
+## How the Pass/Fail Decision Works
+
+A student passes only when **both** category percentages are at least 50%:
+
+```text
+Formative percentage >= 50%  AND  Summative percentage >= 50%   -> PASSED
+Otherwise                                                       -> FAILED
+```
+
+The overall grade is **not** used to decide the status. For example, a
+student could have a 60% overall grade but still fail if one category is
+below 50%.
+
+For the supplied data:
+
+- Formative: 56.67% (passes)
+- Summative: 65.00% (passes)
+- **FINAL STATUS: PASSED**
+
+---
+
+## How Resubmission Eligibility Is Determined
+
+Only **Formative** assignments can be resubmitted. Summative assignments
+are never included.
+
+The program:
+
+1. Collects every Formative assignment with a score **below 50%**.
+2. Finds the **highest weight** among those failed assignments.
+3. Lists **every** failed assignment that shares that highest weight.
+4. If nothing failed, prints a message saying no resubmission is needed.
+
+For the supplied data, two Formative assignments failed and both have a
+weight of 20:
+
+- Group Exercise (Score: 40, Weight: 20)
+- Functions and Debugging Lab (Score: 45, Weight: 20)
+
+**Both** are listed, because they tie for the highest weight.
+
+---
+
+## Validation and Error Handling
+
+The Python program validates the data before calculating anything. It
+prints a clear message and stops when it finds:
+
+- A missing file.
+- An empty file, or a file with headers but no data rows.
+- Missing or duplicate CSV columns.
+- Empty rows or blank cells.
+- Non-numeric scores or weights.
+- Negative scores or scores above 100.
+- Zero or negative weights.
+- Weights that do not total 100.
+- Formative weights that do not total 60.
+- Summative weights that do not total 40.
+- Assignment groups other than `Formative` or `Summative`.
+
+The Bash script reports and exits on missing files, archive directory
+creation failures, move failures, and log write failures.
+
+---
+
+## Example Commands
+
+```bash
+# Go to the project folder
+cd alu-transcript-generator
+
+# Run the grading application
+python3 grade-evaluator.py grades.csv
+
+# Run it interactively
+python3 grade-evaluator.py
+
+# Make the organizer executable (only needed once)
+chmod +x organizer.sh
+
+# Archive the current grades file and reset the workspace
+./organizer.sh
+
+# View the log history
+cat organizer.log
+
+# View archived files
+ls -l archive/
+```
+
+---
+
+## Expected Output for the Supplied Data
+
+```text
+Formative marks:       34.00 / 60   (56.67%)
+Summative marks:       26.00 / 40   (65.00%)
+Total weighted grade:  60.00%
+Final GPA:             3.00 / 5.0
+
+FINAL STATUS: PASSED
+
+--- Resubmission Options ---
+Failed Formative assignment(s) with the highest weight (20) that can be resubmitted:
+  - Group Exercise (Score: 40, Weight: 20)
+  - Functions and Debugging Lab (Score: 45, Weight: 20)
+```
+
+(Spacing may vary slightly; the values are what matter.)
+
+---
+
+## Author
+
+Student project submitted for the ALU Individual Coding Lab,
+**Lab 2: ALU Transcript Generator**.
