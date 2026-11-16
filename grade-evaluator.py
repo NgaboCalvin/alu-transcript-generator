@@ -277,6 +277,51 @@ def load_csv_data(filename=None):
 
 
 # ---------------------------------------------------------------------------
+# 2. WEIGHT VALIDATION
+# ---------------------------------------------------------------------------
+def validate_weights(assignments):
+    """
+    Check the three weight rules:
+        * Total weight  = 100
+        * Formative     = 60
+        * Summative     = 40
+
+    Returns a list of error messages. An empty list means all rules passed.
+    """
+    formative_weight = 0.0
+    summative_weight = 0.0
+
+    for item in assignments:
+        if item["group"] == FORMATIVE:
+            formative_weight += item["weight"]
+        else:
+            summative_weight += item["weight"]
+
+    total_weight = formative_weight + summative_weight
+    errors = []
+
+    if abs(total_weight - TOTAL_WEIGHT) > TOLERANCE:
+        errors.append(
+            f"Total assignment weight must be exactly 100, "
+            f"but it is {total_weight:g}."
+        )
+
+    if abs(formative_weight - FORMATIVE_TOTAL_WEIGHT) > TOLERANCE:
+        errors.append(
+            f"Formative weight must be exactly 60, "
+            f"but it is {formative_weight:g}."
+        )
+
+    if abs(summative_weight - SUMMATIVE_TOTAL_WEIGHT) > TOLERANCE:
+        errors.append(
+            f"Summative weight must be exactly 40, "
+            f"but it is {summative_weight:g}."
+        )
+
+    return errors
+
+
+# ---------------------------------------------------------------------------
 # 5. DISPLAYING THE REPORT
 # ---------------------------------------------------------------------------
 def print_assignment_table(assignments):
@@ -299,11 +344,34 @@ def print_assignment_table(assignments):
 # ---------------------------------------------------------------------------
 def evaluate_grades(data):
     """
-    Display the assignment records that were loaded from the CSV file.
-    Returns True when the calculation finished.
+    Validate the weights and display the loaded assignment records.
+    Returns True when the calculation finished, False when the data is invalid.
     """
     print("\n--- Processing Grades ---")
+
+    weight_errors = validate_weights(data)
+    if weight_errors:
+        print("\nWeight validation failed:")
+        for message in weight_errors:
+            print(f"  - {message}")
+        print("\nGrades were not calculated because the weights are invalid.")
+        return False
+
     print_assignment_table(data)
+
+    formative_weight = 0.0
+    summative_weight = 0.0
+    for item in data:
+        if item["group"] == FORMATIVE:
+            formative_weight += item["weight"]
+        else:
+            summative_weight += item["weight"]
+
+    print("\n--- Weight Validation ---")
+    print(f"Formative weight: {formative_weight:g} / 60   OK")
+    print(f"Summative weight: {summative_weight:g} / 40   OK")
+    print(f"Total weight:     {formative_weight + summative_weight:g} / 100  OK")
+
     return True
 # ---------------------------------------------------------------------------
 # 6. PROGRAM ENTRY POINT
